@@ -1,8 +1,6 @@
-// src/types/room.ts (or src/types/index.ts)
-
 export interface Room {
   id: string;
-  title: string;
+  title: string;        // 💡 ប្រើ title ជំនួស name
   description: string;
   price: number;
   location: string;
@@ -10,6 +8,7 @@ export interface Room {
   status: 'Available' | 'Occupied' | 'Maintenance';
   image: string;
   amenities: string[];
+  floor?: string;       // 💡 ថែម floor ចូលដើម្បីកុំឱ្យទាស់កូដ room.floor
 }
 
 export interface Booking {
@@ -22,3 +21,13 @@ export interface Booking {
   status: 'Pending' | 'Confirmed' | 'Canceled';
   totalPrice: number;
 }
+
+// 💡 កែសម្រួល FilterOptions ត្រង់នេះឱ្យត្រូវនឹង Hook របស់បង ១០០%
+export interface FilterOptions {
+  searchTerm: string;
+  statusFilter: string;
+  typeFilter: string;
+  floorFilter: string;
+}
+
+export interface RoomFormData extends Omit<Room, 'id'> {}

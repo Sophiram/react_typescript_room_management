@@ -1,7 +1,8 @@
 // src/hooks/useRoom.ts
 
 import { useState, useCallback } from 'react';
-import type { Room, RoomFormData } from '../types/room';
+// 💡 ១. កែសម្រួលផ្លូវមកត្រឹម '../types' (លុបសញ្ញា / ចេញ)
+import type { Room, RoomFormData } from '../types'; 
 import { SAMPLE_ROOMS } from '../utils/constants';
 
 export function useRoom() {
@@ -11,7 +12,7 @@ export function useRoom() {
     const newRoom: Room = {
       ...formData,
       id: Date.now().toString(),
-      lastUpdated: new Date(),
+      // 💡 ២. ប្រសិនបើ Interface Room គ្មាន lastUpdated ទេ យើងមិនបាច់ដាក់វាឡើយ
     };
     setRooms(prev => [...prev, newRoom]);
     return newRoom;
@@ -21,7 +22,7 @@ export function useRoom() {
     setRooms(prev =>
       prev.map(room =>
         room.id === id
-          ? { ...room, ...formData, lastUpdated: new Date() }
+          ? { ...room, ...formData } // 💡 លុប lastUpdated ចេញ
           : room
       )
     );
@@ -36,8 +37,9 @@ export function useRoom() {
     [rooms]
   );
 
+  // 💡 ៣. កែសម្រួលស្ថានភាព 'available' ទៅជា 'Available' (អក្សរធំ) ឱ្យត្រូវតាម Type Interface
   const getAvailableRooms = useCallback(
-    () => rooms.filter(room => room.status === 'available'),
+    () => rooms.filter(room => room.status === 'Available'),
     [rooms]
   );
 
@@ -47,16 +49,16 @@ export function useRoom() {
   );
 
   const getRoomsByFloor = useCallback(
-    (floor: number) => rooms.filter(room => room.floor === floor),
+    (floor: string) => rooms.filter(room => room.floor === floor),
     [rooms]
   );
 
   const updateRoomStatus = useCallback(
-    (id: string, status: 'available' | 'occupied' | 'maintenance') => {
+    (id: string, status: 'Available' | 'Occupied' | 'Maintenance') => {
       setRooms(prev =>
         prev.map(room =>
           room.id === id
-            ? { ...room, status, lastUpdated: new Date() }
+            ? { ...room, status } // 💡 លុប lastUpdated ចេញ
             : room
         )
       );
@@ -64,11 +66,12 @@ export function useRoom() {
     []
   );
 
+  // 💡 ៤. កែសម្រួលអក្សរធំលើ Status ក្នុងផ្នែកគណនា Stats 
   const stats = {
     total: rooms.length,
-    available: rooms.filter(r => r.status === 'available').length,
-    occupied: rooms.filter(r => r.status === 'occupied').length,
-    maintenance: rooms.filter(r => r.status === 'maintenance').length,
+    available: rooms.filter(r => r.status === 'Available').length,
+    occupied: rooms.filter(r => r.status === 'Occupied').length,
+    maintenance: rooms.filter(r => r.status === 'Maintenance').length,
   };
 
   return {

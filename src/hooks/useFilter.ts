@@ -1,7 +1,5 @@
-// src/hooks/useFilter.ts
-
 import { useState, useMemo } from 'react';
-import type { Room, FilterOptions } from '../types/room';
+import type { Room, FilterOptions } from '../types'; // 💡 ផ្ទៀងផ្ទាត់ផ្លូវទៅកាន់ types របស់បង
 
 export function useFilter(rooms: Room[]) {
   const [filters, setFilters] = useState<FilterOptions>({
@@ -12,10 +10,11 @@ export function useFilter(rooms: Room[]) {
   });
 
   const filteredRooms = useMemo(() => {
-    return rooms.filter(room => {
-      const matchesSearch = room.name
-        .toLowerCase()
-        .includes(filters.searchTerm.toLowerCase());
+    return rooms.filter((room) => {
+      // 💡 កែពី room.name មក room.title
+      const matchesSearch = room.title
+        ? room.title.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        : true;
 
       const matchesStatus =
         filters.statusFilter === 'all' || room.status === filters.statusFilter;
@@ -30,29 +29,20 @@ export function useFilter(rooms: Room[]) {
     });
   }, [rooms, filters]);
 
-  const setSearchTerm = (term: string) => {
-    setFilters(prev => ({ ...prev, searchTerm: term }));
+  const handleSearchChange = (term: string) => {
+    setFilters((prev) => ({ ...prev, searchTerm: term }));
   };
 
-  const setStatusFilter = (status: string) => {
-    setFilters(prev => ({
-      ...prev,
-      statusFilter: status as FilterOptions['statusFilter'],
-    }));
+  const handleStatusChange = (status: string) => {
+    setFilters((prev) => ({ ...prev, statusFilter: status }));
   };
 
-  const setTypeFilter = (type: string) => {
-    setFilters(prev => ({
-      ...prev,
-      typeFilter: type as FilterOptions['typeFilter'],
-    }));
+  const handleTypeChange = (type: string) => {
+    setFilters((prev) => ({ ...prev, typeFilter: type }));
   };
 
-  const setFloorFilter = (floor: number | string) => {
-    setFilters(prev => ({
-      ...prev,
-      floorFilter: floor === 'all' ? 'all' : Number(floor),
-    }));
+  const handleFloorChange = (floor: string) => {
+    setFilters((prev) => ({ ...prev, floorFilter: floor }));
   };
 
   const resetFilters = () => {
@@ -67,10 +57,10 @@ export function useFilter(rooms: Room[]) {
   return {
     filters,
     filteredRooms,
-    setSearchTerm,
-    setStatusFilter,
-    setTypeFilter,
-    setFloorFilter,
+    handleSearchChange,
+    handleStatusChange,
+    handleTypeChange,
+    handleFloorChange,
     resetFilters,
   };
 }
