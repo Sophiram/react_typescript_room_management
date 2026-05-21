@@ -1,262 +1,121 @@
-// src/components/RoomForm.tsx
-
-import { useState, useEffect } from 'react';
-import type { Room, RoomFormData } from '../types/room';
-import { AMENITIES, ROOM_TYPES, FLOORS } from '../utils/constants';
+import { useState } from 'react';
+import type { Room } from '../types/index';
 
 interface RoomFormProps {
+  onSubmit: (data: Omit<Room, 'id'>) => void;
   initialData?: Room;
-  onSubmit: (data: RoomFormData) => void;
-  onCancel: () => void;
 }
 
-export function RoomForm({
-  initialData,
-  onSubmit,
-  onCancel,
-}: RoomFormProps) {
-  const [formData, setFormData] = useState<RoomFormData>(
-    initialData || {
-      name: '',
-      type: 'conference',
-      capacity: 1,
-      floor: 1,
-      status: 'available',
-      amenities: [],
-      description: '',
-      location: '',
+const AVAILABLE_AMENITIES_LIST = ['Wifi', 'AC', 'Gym', 'Elevator', 'Parking', 'Washing Machine', 'Pool'];
+
+export function RoomForm({ onSubmit, initialData }: RoomFormProps) {
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [price, setPrice] = useState(initialData?.price || 0);
+  const [location, setLocation] = useState(initialData?.location || 'Phnom Penh');
+  const [type, setType] = useState<Room['type']>(initialData?.type || 'Single');
+  const [status, setStatus] = useState<Room['status']>(initialData?.status || 'Available');
+  const [image, setImage] = useState(initialData?.image || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af');
+  const [description, setDescription] = useState(initialData?.description || '');
+  
+  // Array management for checked amenities flags matrix
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(initialData?.amenities || ['Wifi', 'AC']);
+
+  const handleAmenityCheckboxChange = (amenityName: string) => {
+    if (selectedAmenities.includes(amenityName)) {
+      setSelectedAmenities(selectedAmenities.filter(item => item !== amenityName));
+    } else {
+      setSelectedAmenities([...selectedAmenities, amenityName]);
     }
-  );
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name,
-        type: initialData.type,
-        capacity: initialData.capacity,
-        floor: initialData.floor,
-        status: initialData.status,
-        amenities: initialData.amenities,
-        description: initialData.description,
-        location: initialData.location,
-      });
-    }
-  }, [initialData]);
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Room name is required';
-    }
-
-    if (formData.capacity < 1) {
-      newErrors.capacity = 'Capacity must be at least 1';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (validateForm()) {
-      onSubmit(formData);
-    }
-  };
-
-  const toggleAmenity = (amenity: string) => {
-    setFormData(prev => ({
-      ...prev,
-      amenities: prev.amenities.includes(amenity)
-        ? prev.amenities.filter(a => a !== amenity)
-        : [...prev.amenities, amenity],
-    }));
+    onSubmit({ 
+      title, 
+      price: Number(price), 
+      location, 
+      type, 
+      status, 
+      image, 
+      description, 
+      amenities: selectedAmenities 
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Room Name */}
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-200 mb-2">
-          Room Name *
-        </label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-          placeholder="e.g., Conference Room A"
-        />
-        {errors.name && (
-          <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-        )}
+        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Room Title</label>
+        <input type="text" required value={title} onChange={e => setTitle(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white transition-colors" />
       </div>
-
-      {/* Description */}
-      <div>
-        <label className="block text-sm font-medium text-slate-200 mb-2">
-          Description
-        </label>
-        <textarea
-          value={formData.description || ''}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, description: e.target.value }))
-          }
-          rows={3}
-          className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-          placeholder="Add a description for this room..."
-        />
-      </div>
-
-      {/* Grid: Type, Capacity, Floor */}
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">
-            Type *
-          </label>
-          <select
-            value={formData.type}
-            onChange={e =>
-              setFormData(prev => ({
-                ...prev,
-                type: e.target.value as RoomFormData['type'],
-              }))
-            }
-            className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-          >
-            {ROOM_TYPES.map(type => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">
-            Capacity *
-          </label>
-          <input
-            type="number"
-            min="1"
-            value={formData.capacity}
-            onChange={e =>
-              setFormData(prev => ({
-                ...prev,
-                capacity: Math.max(1, parseInt(e.target.value) || 1),
-              }))
-            }
-            className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-          />
-          {errors.capacity && (
-            <p className="text-red-400 text-sm mt-1">{errors.capacity}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">
-            Floor *
-          </label>
-          <select
-            value={formData.floor}
-            onChange={e =>
-              setFormData(prev => ({
-                ...prev,
-                floor: parseInt(e.target.value),
-              }))
-            }
-            className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-          >
-            {FLOORS.map(floor => (
-              <option key={floor} value={floor}>
-                Floor {floor}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Grid: Status, Location */}
+      
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">
-            Status *
-          </label>
-          <select
-            value={formData.status}
-            onChange={e =>
-              setFormData(prev => ({
-                ...prev,
-                status: e.target.value as RoomFormData['status'],
-              }))
-            }
-            className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-          >
-            <option value="available">Available</option>
-            <option value="occupied">Occupied</option>
-            <option value="maintenance">Maintenance</option>
+          <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Price ($/mo)</label>
+          <input type="number" required value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white transition-colors" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Location</label>
+          <select value={location} onChange={e => setLocation(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white cursor-pointer">
+            <option value="Phnom Penh">Phnom Penh</option>
+            <option value="Siem Reap">Siem Reap</option>
           </select>
         </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-200 mb-2">
-            Location
-          </label>
-          <input
-            type="text"
-            value={formData.location || ''}
-            onChange={e =>
-              setFormData(prev => ({ ...prev, location: e.target.value }))
-            }
-            className="w-full px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
-            placeholder="e.g., Building A"
-          />
+          <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Room Type</label>
+          <select value={type} onChange={e => setType(e.target.value as Room['type'])} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white cursor-pointer">
+            <option value="Single">Single</option>
+            <option value="Double">Double</option>
+            <option value="Studio">Studio</option>
+            <option value="Apartment">Apartment</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Status</label>
+          <select value={status} onChange={e => setStatus(e.target.value as Room['status'])} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white cursor-pointer">
+            <option value="Available">Available</option>
+            <option value="Occupied">Occupied</option>
+            <option value="Maintenance">Maintenance</option>
+          </select>
         </div>
       </div>
 
-      {/* Amenities */}
       <div>
-        <label className="block text-sm font-medium text-slate-200 mb-3">
-          Amenities
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {AMENITIES.map(amenity => (
-            <button
-              key={amenity}
-              type="button"
-              onClick={() => toggleAmenity(amenity)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                formData.amenities.includes(amenity)
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              {amenity}
-            </button>
-          ))}
+        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Image Asset Cover URL</label>
+        <input type="text" value={image} onChange={e => setImage(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white transition-colors" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Property Amenities Checklist</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 border border-gray-100 bg-gray-50/50 rounded-xl p-3 max-h-[120px] overflow-y-auto">
+          {AVAILABLE_AMENITIES_LIST.map(amenity => {
+            const isChecked = selectedAmenities.includes(amenity);
+            return (
+              <label key={amenity} className="flex items-center gap-2 text-xs text-gray-600 font-medium cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  checked={isChecked} 
+                  onChange={() => handleAmenityCheckboxChange(amenity)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4" 
+                />
+                <span>{amenity}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
-      {/* Form Actions */}
-      <div className="flex gap-3 pt-6 border-t border-slate-700/50">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 px-4 py-2 bg-slate-700 text-slate-100 rounded-lg font-medium hover:bg-slate-600 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-cyan-500/50 transition-all"
-        >
-          {initialData ? 'Update Room' : 'Create Room'}
-        </button>
+      <div>
+        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Detailed Description Summary</label>
+        <textarea rows={2} value={description} onChange={e => setDescription(e.target.value)} className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 bg-gray-50/50 focus:bg-white transition-colors resize-none"></textarea>
       </div>
+
+      <button type="submit" className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md tracking-wider transition-all active:scale-[0.99] cursor-pointer">
+        Save Asset Specifications
+      </button>
     </form>
   );
 }

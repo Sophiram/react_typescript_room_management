@@ -1,103 +1,31 @@
-// src/components/RoomCard.tsx
+import { Link } from 'react-router-dom';
+import { MapPin, DollarSign } from 'lucide-react';
+import  type { Room } from '../types';
 
-import { Trash2, Edit2, Users, MapPin } from 'lucide-react';
-import type { Room } from '../types/room';
-import { ROOM_TYPES, STATUS_COLORS } from '../utils/constants';
-
-interface RoomCardProps {
-  room: Room;
-  onEdit: (room: Room) => void;
-  onDelete: (id: string) => void;
-}
-
-export function RoomCard({ room, onEdit, onDelete }: RoomCardProps) {
-  const roomType = ROOM_TYPES.find(t => t.value === room.type);
-  const statusColors = STATUS_COLORS[room.status];
-
+export function RoomCard({ room }: { room: Room }) {
   return (
-    <div className="group bg-gradient-to-br from-slate-800/60 to-slate-800/40 border border-slate-700/50 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/20 hover:-translate-y-1">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{roomType?.icon}</span>
-          <div>
-            <h3 className="text-lg font-bold text-slate-100">{room.name}</h3>
-            {room.location && (
-              <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                <MapPin size={12} /> {room.location}
-              </p>
-            )}
-          </div>
-        </div>
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold border ${statusColors.bg} ${statusColors.text} ${statusColors.border}`}
-        >
-          {room.status.charAt(0).toUpperCase() + room.status.slice(1)}
-        </span>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+      <div className="relative h-48 w-full bg-gray-100">
+        <img src={room.image} alt={room.title} className="w-full h-full object-cover" />
+        <span className={`absolute top-3 right-3 px-2.5 py-1 text-xs font-semibold rounded-full shadow-sm ${
+          room.status === 'Available' ? 'bg-green-100 text-green-800' : room.status === 'Occupied' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
+        }`}>{room.status}</span>
       </div>
-
-      {/* Description */}
-      {room.description && (
-        <p className="text-sm text-slate-400 mb-4 line-clamp-2">
-          {room.description}
-        </p>
-      )}
-
-      {/* Details */}
-      <div className="space-y-3 mb-4 pb-4 border-b border-slate-700/50">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Type:</span>
-          <span className="text-slate-200 font-medium">{roomType?.label}</span>
+      <div className="p-5 flex flex-col flex-grow">
+        <span className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">{room.type}</span>
+        <h3 className="font-bold text-gray-900 text-lg line-clamp-1 mb-2">{room.title}</h3>
+        <div className="flex items-center gap-1 text-gray-500 text-sm mb-4">
+          <MapPin size={16} /> <span>{room.location}</span>
         </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400 flex items-center gap-2">
-            <Users size={16} /> Capacity:
-          </span>
-          <span className="text-slate-200 font-medium">{room.capacity} people</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-400">Floor:</span>
-          <span className="text-slate-200 font-medium">{room.floor}</span>
-        </div>
-      </div>
-
-      {/* Amenities */}
-      {room.amenities.length > 0 && (
-        <div className="mb-4">
-          <p className="text-xs text-slate-400 mb-2 font-semibold">AMENITIES</p>
-          <div className="flex flex-wrap gap-2">
-            {room.amenities.map(amenity => (
-              <span
-                key={amenity}
-                className="bg-slate-700/50 text-slate-300 text-xs px-2 py-1 rounded border border-slate-600/50"
-              >
-                {amenity}
-              </span>
-            ))}
+        <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50">
+          <div className="flex items-baseline text-blue-600 font-bold text-xl">
+            <DollarSign size={18} className="-mr-0.5" />
+            {room.price}<span className="text-gray-400 text-xs font-normal">/month</span>
           </div>
+          <Link to={`/room/${room.id}`} className="px-3 py-1.5 bg-gray-900 hover:bg-blue-600 text-white font-medium text-xs rounded-lg transition-colors">
+            View Details
+          </Link>
         </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex gap-2 pt-4 border-t border-slate-700/50">
-        <button
-          onClick={() => onEdit(room)}
-          className="flex-1 flex items-center justify-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 py-2 rounded-lg transition-all text-sm font-medium group/btn"
-        >
-          <Edit2 size={16} className="group-hover/btn:scale-110 transition-transform" />
-          Edit
-        </button>
-        <button
-          onClick={() => {
-            if (confirm(`Are you sure you want to delete "${room.name}"?`)) {
-              onDelete(room.id);
-            }
-          }}
-          className="flex-1 flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 py-2 rounded-lg transition-all text-sm font-medium group/btn"
-        >
-          <Trash2 size={16} className="group-hover/btn:scale-110 transition-transform" />
-          Delete
-        </button>
       </div>
     </div>
   );
